@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -76,7 +75,7 @@ public class UserPaint extends View {
             mPaint.setStrokeWidth(fp.strokeWidth);
             mPaint.setMaskFilter(null);
 
-            mCanvas.drawPath(fp.path, mPaint);
+            mCanvas.drawPath(fp, mPaint);
 
         }
 
@@ -85,9 +84,9 @@ public class UserPaint extends View {
     }
 
     private void touchStart(int pointId,float x, float y) {
-        UserPath fp = new UserPath(currentColor, strokeWidth, x, y, new Path());
-        fp.path.reset();
-        fp.path.moveTo(x, y);
+        UserPath fp = new UserPath(this.currentColor, this.strokeWidth, x, y);
+        fp.reset();
+        fp.moveTo(x, y);
         paths.put(pointId, fp);
     }
 
@@ -97,7 +96,7 @@ public class UserPaint extends View {
         float dy = Math.abs(y - fp.y);
 
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-            fp.path.quadTo(fp.x, fp.y, (x + fp.x) / 2, (y + fp.y) / 2);
+            fp.quadTo(fp.x, fp.y, (x + fp.x) / 2, (y + fp.y) / 2);
             fp.x = x;
             fp.y = y;
         }
@@ -128,22 +127,20 @@ public class UserPaint extends View {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
                 touchStart(pointerId, x, y);
-                invalidate();
                 break;
             case MotionEvent.ACTION_MOVE :
                 for (int size = event.getPointerCount(), i = 0; i < size; i++) {
                     touchMove(event.getPointerId(i), event.getX(i), event.getY(i));
                 }
-                invalidate();
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_CANCEL:
                 touchUp(pointerId);
-                invalidate();
                 break;
         }
 
+        invalidate();
         return true;
     }
 }
