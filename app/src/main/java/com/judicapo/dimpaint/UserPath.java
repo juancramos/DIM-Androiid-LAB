@@ -13,4 +13,13 @@ public class UserPath extends Path {
         this.x = mX;
         this.y = mY;
     }
+
+    public void drawTriangle(int width) {
+        int halfWidth = width / 2;
+        this.moveTo(this.x, this.y - halfWidth); // Top
+        this.lineTo(this.x - halfWidth, this.y + halfWidth); // Bottom left
+        this.lineTo(this.x + halfWidth, this.y + halfWidth); // Bottom right
+        this.lineTo(this.x, this.y - halfWidth); // Back to Top
+        this.close();
+    }
 }

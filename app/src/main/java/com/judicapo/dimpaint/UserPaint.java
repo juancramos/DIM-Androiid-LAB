@@ -90,6 +90,13 @@ public class UserPaint extends View {
         paths.put(pointId, fp);
     }
 
+    private void triangleStart(int pointId,float x, float y) {
+        UserPath fp = new UserPath(this.currentColor, this.strokeWidth, x, y);
+        fp.reset();
+        fp.drawTriangle(500);
+        paths.put(pointId, fp);
+    }
+
     private void touchMove(int pointerId, float x, float y) {
         UserPath fp = paths.get(pointerId);
         float dx = Math.abs(x - fp.x);
@@ -126,7 +133,10 @@ public class UserPaint extends View {
         switch(maskedAction) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
-                touchStart(pointerId, x, y);
+                if (event.getPointerCount() == 3) {
+                    triangleStart(pointerId, x, y);
+                }
+                else touchStart(pointerId, x, y);
                 break;
             case MotionEvent.ACTION_MOVE :
                 for (int size = event.getPointerCount(), i = 0; i < size; i++) {
