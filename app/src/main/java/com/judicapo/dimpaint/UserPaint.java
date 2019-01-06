@@ -11,6 +11,10 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class UserPaint extends View {
@@ -90,11 +94,37 @@ public class UserPaint extends View {
         paths.put(pointId, fp);
     }
 
-    private void triangleStart(int pointId,float x, float y) {
-        UserPath fp = new UserPath(this.currentColor, this.strokeWidth, x, y);
-        fp.reset();
-        fp.drawTriangle(500);
-        paths.put(pointId, fp);
+    private void triangleStart(int[] c) {
+        List<UserPath> list = new ArrayList<>();
+
+        for (int i = 0; c.length == 3 && i < c.length; i++) {
+            list.add(paths.get(c[i]));
+        }
+        Collections.sort(list);
+
+        UserPath pivot = list.get(1);
+        list.remove(pivot);
+        UserPath close = null;
+        double dist = 0;
+
+        for (int i = 0; i < list.size(); i++) {
+            UserPath fp = list.get(i);
+            float xx = fp.x > pivot.x ? fp.x : pivot.x;
+            float xs = fp.x < pivot.x ? fp.x : pivot.x;
+            float yy = fp.y > pivot.y ? fp.y : pivot.y;
+            float ys = fp.y < pivot.y ? fp.y : pivot.y;
+            double bet = Math.sqrt(Math.pow(xx - xs ,2) + Math.pow(yy - ys ,2));
+            if (dist == 0) {
+                dist = bet;
+                close = fp;
+            }
+            else if (dist > bet) {
+                dist = bet;
+                close = fp;
+            }
+        }
+        close.reset();
+        close.drawTriangle(dist);
     }
 
     private void touchMove(int pointerId, float x, float y) {
@@ -133,13 +163,17 @@ public class UserPaint extends View {
         switch(maskedAction) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
+                touchStart(pointerId, x, y);
                 if (event.getPointerCount() == 3) {
-                    triangleStart(pointerId, x, y);
+                    int[] c = new int[3];
+                    for (int i = 0; i < event.getPointerCount(); i++) {
+                        c[i] = event.getPointerId(i);
+                    }
+                    triangleStart(c);
                 }
-                else touchStart(pointerId, x, y);
                 break;
             case MotionEvent.ACTION_MOVE :
-                for (int size = event.getPointerCount(), i = 0; i < size; i++) {
+                for (int i = 0; i < event.getPointerCount(); i++) {
                     touchMove(event.getPointerId(i), event.getX(i), event.getY(i));
                 }
                 break;
