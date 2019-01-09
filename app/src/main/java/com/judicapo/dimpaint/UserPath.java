@@ -2,6 +2,8 @@ package com.judicapo.dimpaint;
 
 import android.graphics.Path;
 
+import java.util.List;
+
 public class UserPath extends Path implements Comparable {
     public int color;
     public int strokeWidth;
@@ -14,12 +16,26 @@ public class UserPath extends Path implements Comparable {
         this.y = mY;
     }
 
-    public void drawTriangle(UserPath match) {
-        int halfWidth = (int)Math.sqrt(Math.pow(this.x - match.x, 2) + Math.pow(this.y - match.y, 2));
-        this.moveTo(match.x, match.y); // Top
-        this.lineTo((int)(halfWidth * (Math.cos(45))) - match.x, (int)(halfWidth * (Math.sin(45))) -  match.y); // Bottom
-        this.lineTo((int)(halfWidth * (Math.cos(-45))) - match.x, (int)(halfWidth * (Math.sin(-45))) -  match.y);
-        this.lineTo(match.x, match.y); // Back to Top
+    public void drawTriangle(List<UserPath> list) {
+        this.moveTo(this.x, this.y); // Top
+        double topLine = Math.sqrt(Math.pow(this.x - list.get(0).x,2) + Math.pow(this.y - list.get(0).y,2));
+        this.lineTo(list.get(0).x, list.get(0).y); // Bottom
+        double bottomLine = Math.sqrt(Math.pow(list.get(0).x - list.get(1).x,2) + Math.pow(list.get(0).y - list.get(1).y,2));
+        this.lineTo(list.get(1).x, list.get(1).y);
+        double hipLine = Math.sqrt(Math.pow(list.get(1).x - this.x,2) + Math.pow(list.get(1).y - this.y,2));
+        this.lineTo(this.x, this.y); // Back to Top
+
+        if (topLine < bottomLine && topLine < hipLine){
+            this.moveTo(list.get(1).x, list.get(1).y);
+            this.lineTo(list.get(1).x + 100, list.get(1).y + 100);
+        } else if (bottomLine < topLine && bottomLine < hipLine){
+            this.moveTo(this.x, this.y);
+            this.lineTo(this.x + 100, this.y + 100);
+        } else if (hipLine < topLine && hipLine < bottomLine){
+            this.moveTo(list.get(0).x, list.get(0).y);
+            this.lineTo(list.get(0).x + 100, list.get(0).y + 100);
+        }
+
         this.close();
     }
 

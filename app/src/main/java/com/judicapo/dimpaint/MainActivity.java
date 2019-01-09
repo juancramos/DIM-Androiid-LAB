@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.widget.RadioButton;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,5 +21,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onRadioButtonClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+
+        // Check which radio button was clicked
+        switch(view.getId()) {
+            case R.id.radio_design:
+                if (checked)
+                    userPaint.viewType = ViewType.DESIGN;
+                    break;
+            case R.id.radio_vector:
+                if (checked)
+                    userPaint.viewType = ViewType.VECTOR;
+                    break;
+        }
     }
 }

@@ -11,7 +11,6 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +18,7 @@ import java.util.Random;
 
 public class UserPaint extends View {
 
+    public ViewType viewType = ViewType.DESIGN;
     public static int BRUSH_SIZE = 20;
     public static final int DEFAULT_COLOR = Color.RED;
     public static final int DEFAULT_BG_COLOR = Color.WHITE;
@@ -104,20 +104,8 @@ public class UserPaint extends View {
         int pivotIndex = list.size() / 2;
         UserPath pivot = list.get(pivotIndex);
         list.remove(pivot);
-        UserPath close = null;
-        double dist = 0;
 
-        for (int i = 0; i < list.size(); i++) {
-            UserPath fp = list.get(i);
-            double bet = Math.sqrt(Math.pow(pivot.x - fp.x, 2) + Math.pow( pivot.y - fp.y, 2));
-            dist = bet;
-            if (dist < bet) {
-                continue;
-            }
-            close = fp;
-        }
-        pivot.reset();
-        pivot.drawTriangle(close);
+        pivot.drawTriangle(list);
     }
 
     private void touchMove(int pointerId, float x, float y) {
@@ -157,7 +145,7 @@ public class UserPaint extends View {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
                 touchStart(pointerId, x, y);
-                if (event.getPointerCount() == 3) {
+                if (this.viewType == ViewType.VECTOR && event.getPointerCount() == 3) {
                     int[] c = new int[event.getPointerCount()];
                     for (int i = 0; i < event.getPointerCount(); i++) {
                         c[i] = event.getPointerId(i);
@@ -166,7 +154,7 @@ public class UserPaint extends View {
                 }
                 break;
             case MotionEvent.ACTION_MOVE :
-                for (int i = 0; i < event.getPointerCount(); i++) {
+                for (int i = 0; viewType == ViewType.DESIGN && i < event.getPointerCount(); i++) {
                     touchMove(event.getPointerId(i), event.getX(i), event.getY(i));
                 }
                 break;
