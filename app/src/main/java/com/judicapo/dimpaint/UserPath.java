@@ -14,19 +14,22 @@ public class UserPath extends Path implements Comparable {
         this.y = mY;
     }
 
-    public void drawTriangle(double width) {
-        int halfWidth = (int)width / 2;
-        this.moveTo(this.x, this.y - halfWidth); // Top
-        this.lineTo(this.x - halfWidth, this.y + halfWidth); // Bottom left
-        this.lineTo(this.x + halfWidth, this.y + halfWidth); // Bottom right
-        this.lineTo(this.x, this.y - halfWidth); // Back to Top
+    public void drawTriangle(UserPath match) {
+        int halfWidth = (int)Math.sqrt(Math.pow(this.x - match.x, 2) + Math.pow(this.y - match.y, 2));
+        this.moveTo(match.x, match.y); // Top
+        this.lineTo((int)(halfWidth * (Math.cos(45))) - match.x, (int)(halfWidth * (Math.sin(45))) -  match.y); // Bottom
+        this.lineTo((int)(halfWidth * (Math.cos(-45))) - match.x, (int)(halfWidth * (Math.sin(-45))) -  match.y);
+        this.lineTo(match.x, match.y); // Back to Top
         this.close();
     }
 
+
     @Override
     public int compareTo(Object o) {
-        if (this.x > ((UserPath) o).x || this.y > ((UserPath) o).y) return -1;
-        else if (this.x == ((UserPath) o).x && this.y == ((UserPath) o).y) return 0;
+        double own = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+        double other = Math.sqrt(Math.pow(((UserPath) o).x, 2) + Math.pow(((UserPath) o).y, 2));
+        if (own == other) return 0;
+        else if (own > other) return -1;
         else return 1;
     }
 

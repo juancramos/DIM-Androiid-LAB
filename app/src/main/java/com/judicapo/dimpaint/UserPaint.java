@@ -97,34 +97,27 @@ public class UserPaint extends View {
     private void triangleStart(int[] c) {
         List<UserPath> list = new ArrayList<>();
 
-        for (int i = 0; c.length == 3 && i < c.length; i++) {
+        for (int i = 0; i < c.length; i++) {
             list.add(paths.get(c[i]));
         }
         Collections.sort(list);
-
-        UserPath pivot = list.get(1);
+        int pivotIndex = list.size() / 2;
+        UserPath pivot = list.get(pivotIndex);
         list.remove(pivot);
         UserPath close = null;
         double dist = 0;
 
         for (int i = 0; i < list.size(); i++) {
             UserPath fp = list.get(i);
-            float xx = fp.x > pivot.x ? fp.x : pivot.x;
-            float xs = fp.x < pivot.x ? fp.x : pivot.x;
-            float yy = fp.y > pivot.y ? fp.y : pivot.y;
-            float ys = fp.y < pivot.y ? fp.y : pivot.y;
-            double bet = Math.sqrt(Math.pow(xx - xs ,2) + Math.pow(yy - ys ,2));
-            if (dist == 0) {
-                dist = bet;
-                close = fp;
+            double bet = Math.sqrt(Math.pow(pivot.x - fp.x, 2) + Math.pow( pivot.y - fp.y, 2));
+            dist = bet;
+            if (dist < bet) {
+                continue;
             }
-            else if (dist > bet) {
-                dist = bet;
-                close = fp;
-            }
+            close = fp;
         }
-        close.reset();
-        close.drawTriangle(dist);
+        pivot.reset();
+        pivot.drawTriangle(close);
     }
 
     private void touchMove(int pointerId, float x, float y) {
@@ -165,7 +158,7 @@ public class UserPaint extends View {
             case MotionEvent.ACTION_POINTER_DOWN:
                 touchStart(pointerId, x, y);
                 if (event.getPointerCount() == 3) {
-                    int[] c = new int[3];
+                    int[] c = new int[event.getPointerCount()];
                     for (int i = 0; i < event.getPointerCount(); i++) {
                         c[i] = event.getPointerId(i);
                     }

@@ -10,4 +10,27 @@
         android:id="@+id/userPaint"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checkedButton="@+id/radio_design"
+        android:orientation="horizontal"
+        android:visibility="visible">
+
+        <RadioButton
+            android:id="@+id/radio_design"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="design" />
+
+        <RadioButton
+            android:id="@+id/radio_vector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="vector" />
+    </RadioGroup>
+
 </android.support.constraint.ConstraintLayout>
