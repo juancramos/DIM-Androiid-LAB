@@ -7,7 +7,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.SparseArray;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -32,6 +34,7 @@ public class UserPaint extends View {
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+    private GestureDetector gestureDetector;
 
     public UserPaint(Context context) {
         this(context, null);
@@ -39,15 +42,16 @@ public class UserPaint extends View {
 
     public UserPaint(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mPaint = new Paint();
-        mPaint.setAntiAlias(true);
-        mPaint.setDither(true);
-        mPaint.setColor(DEFAULT_COLOR);
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeJoin(Paint.Join.ROUND);
-        mPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPaint.setXfermode(null);
-        mPaint.setAlpha(0xff);
+        this.gestureDetector = new GestureDetector(context, new GestureListener());
+        this.mPaint = new Paint();
+        this.mPaint.setAntiAlias(true);
+        this.mPaint.setDither(true);
+        this.mPaint.setColor(DEFAULT_COLOR);
+        this.mPaint.setStyle(Paint.Style.STROKE);
+        this.mPaint.setStrokeJoin(Paint.Join.ROUND);
+        this.mPaint.setStrokeCap(Paint.Cap.ROUND);
+        this.mPaint.setXfermode(null);
+        this.mPaint.setAlpha(0xff);
     }
 
     public void init(DisplayMetrics metrics) {
@@ -123,7 +127,7 @@ public class UserPaint extends View {
     private void touchUp(int pointerId) {
 /*        UserPath fp = paths.get(pointerId);
         fp.path.lineTo(fp.x, fp.y);*/
-        paths.remove(pointerId);
+        if (this.viewType == ViewType.DESIGN) paths.remove(pointerId);
     }
 
     @Override
@@ -165,7 +169,25 @@ public class UserPaint extends View {
                 break;
         }
 
+        this.gestureDetector.onTouchEvent(event);
         invalidate();
         return true;
+    }
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        // event when double tap occurs
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            if (viewType == ViewType.SCALAR) {
+                int pointerIndex = e.getActionIndex();
+                int pointerId = e.getPointerId(pointerIndex);
+
+                paths.get(pointerId).drawRectangle();
+                // clean drawing area on double tap
+                Log.d("Double Tap", "Tapped at: (" + pointerId + ")");
+            }
+            return true;
+        }
+
     }
 }

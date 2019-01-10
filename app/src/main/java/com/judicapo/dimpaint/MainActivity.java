@@ -34,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
                 if (checked)
                     userPaint.viewType = ViewType.VECTOR;
                     break;
+            case R.id.radio_scalar:
+                if (checked)
+                    userPaint.viewType = ViewType.SCALAR;
+                break;
         }
     }
 }
