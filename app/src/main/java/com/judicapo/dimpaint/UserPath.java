@@ -8,12 +8,17 @@ public class UserPath extends Path implements Comparable {
     public int color;
     public int strokeWidth;
     public float x, y;
+    public float left, top, right, bottom;
 
     public UserPath(int color, int strokeWidth, float mX, float mY) {
         this.color = color;
         this.strokeWidth = strokeWidth;
         this.x = mX;
         this.y = mY;
+        left = 0;
+        top = 0;
+        right = 0;
+        bottom = 0;
     }
 
     public void drawTriangle(List<UserPath> list) {
@@ -46,14 +51,20 @@ public class UserPath extends Path implements Comparable {
         this.close();
     }
 
-    public void drawRectangle() {
-        this.moveTo(this.x + 200, this.y + 200);
-        this.lineTo(this.x + 200, this.y - 200);
-        this.lineTo(this.x - 200, this.y - 200);
-        this.moveTo(this.x - 200, this.y - 200);
-        this.lineTo(this.x - 200, this.y + 200);
-        this.lineTo(this.x + 200, this.y + 200);
-        this.close();
+    public void drawRectangle(int size) {
+        this.left = this.x - size;
+        this.right = this.x + size;
+        this.top = this.y - size;
+        this.bottom = this.y + size;
+    }
+
+    public void move(float factor) {
+        this.left += factor;
+        this.right += factor;
+        this.top += factor;
+        this.bottom += factor;
+        this.x += factor;
+        this.y += factor;
     }
 
     private double calculateAngle(double P1X, double P1Y, double P2X, double P2Y, double P3X, double P3Y){
@@ -65,6 +76,11 @@ public class UserPath extends Path implements Comparable {
         }else{
             return asn;
         }
+    }
+
+    boolean closeTo(float tx, float ty, float ratio) {
+        double d = Math.sqrt(Math.pow(this.x - tx, 2) + Math.pow(this.y - ty, 2));
+        return d <= ratio;
     }
 
     @Override

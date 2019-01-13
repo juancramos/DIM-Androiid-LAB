@@ -5,12 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.CountDownTimer;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -20,14 +21,14 @@ import java.util.Random;
 
 public class UserPaint extends View {
 
-    public ViewType viewType = ViewType.DESIGN;
-    public static int BRUSH_SIZE = 20;
-    public static final int DEFAULT_COLOR = Color.RED;
-    public static final int DEFAULT_BG_COLOR = Color.WHITE;
-    private Random rnd = new Random();
+    private static int BRUSH_SIZE = 20;
+    private static final int DEFAULT_COLOR = Color.RED;
+    private static final int DEFAULT_BG_COLOR = Color.WHITE;
     private static final float TOUCH_TOLERANCE = 4;
+    private static final float TOTAL_RATIO = 100;
+    private Random rnd = new Random();
     private Paint mPaint;
-    private SparseArray<UserPath> paths = new SparseArray<>();
+    private SparseArray<UserPath> paths;
     private int currentColor;
     private int backgroundColor = DEFAULT_BG_COLOR;
     private int strokeWidth;
@@ -35,6 +36,12 @@ public class UserPaint extends View {
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
     private GestureDetector gestureDetector;
+    private ScaleGestureDetector mScaleGestureDetector;
+    private float mScaleFactor;
+    private CountDownTimer cTimer;
+    private float centerX;
+    private float centerY;
+    public ViewType viewType;
 
     public UserPaint(Context context) {
         this(context, null);
@@ -43,6 +50,7 @@ public class UserPaint extends View {
     public UserPaint(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.gestureDetector = new GestureDetector(context, new GestureListener());
+        this.mScaleGestureDetector = new ScaleGestureDetector(context, new ScaleListener());
         this.mPaint = new Paint();
         this.mPaint.setAntiAlias(true);
         this.mPaint.setDither(true);
@@ -57,18 +65,25 @@ public class UserPaint extends View {
     public void init(DisplayMetrics metrics) {
         int height = metrics.heightPixels;
         int width = metrics.widthPixels;
+        this.viewType = ViewType.DESIGN;
+        this.paths = new SparseArray<>();
+        this.mScaleFactor = 1.0f;
+        this.cTimer = null;
+        this.centerX = width / 2;
+        this.centerY = height / 2;
 
-        mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
-
-        currentColor = DEFAULT_COLOR;
-        strokeWidth = BRUSH_SIZE;
+        this.mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        this.mCanvas = new Canvas(mBitmap);
+        this.currentColor = DEFAULT_COLOR;
+        this.strokeWidth = BRUSH_SIZE;
     }
 
 
     public void clear() {
-        backgroundColor = DEFAULT_BG_COLOR;
-        paths.clear();
+        this.backgroundColor = DEFAULT_BG_COLOR;
+        this.mScaleFactor = 1.0f;
+        this.paths.clear();
+        this.cancelTimer();
         invalidate();
     }
 
@@ -82,8 +97,27 @@ public class UserPaint extends View {
             mPaint.setColor(fp.color);
             mPaint.setStrokeWidth(fp.strokeWidth);
             mPaint.setMaskFilter(null);
+            canvas.scale(mScaleFactor, mScaleFactor);
 
-            mCanvas.drawPath(fp, mPaint);
+            switch (this.viewType) {
+                case NONE:
+                    break;
+                case DESIGN:
+                    mCanvas.drawPath(fp, mPaint);
+                    break;
+                case VECTOR:
+                    mCanvas.drawPath(fp, mPaint);
+                    break;
+                case SCALAR:
+                    if (fp.top != 0 && fp.bottom != 0 && fp.right != 0 && fp.left != 0)
+                        mCanvas.drawRect(fp.left,fp.top,fp.right,fp.bottom,mPaint);
+                    break;
+                case TIMER:
+                    if (fp.top != 0 && fp.bottom != 0 && fp.right != 0 && fp.left != 0)
+                        mCanvas.drawRect(fp.left,fp.top,fp.right,fp.bottom,mPaint);
+                    else mCanvas.drawPath(fp, mPaint);
+                    break;
+            }
 
         }
 
@@ -95,14 +129,37 @@ public class UserPaint extends View {
         UserPath fp = new UserPath(this.currentColor, this.strokeWidth, x, y);
         fp.reset();
         fp.moveTo(x, y);
-        paths.put(pointId, fp);
+        switch (this.viewType) {
+            case NONE:
+                break;
+            case DESIGN:
+                paths.put(pointId, fp);
+                break;
+            case VECTOR:
+                paths.put(this.paths.size(), fp);
+                break;
+            case SCALAR:
+                paths.put(this.paths.size(), fp);
+                break;
+            case TIMER:
+//                double d = Math.sqrt(Math.pow(centerX - x, 2) + Math.pow(centerY - y, 2));
+//                if (d > TOTAL_RATIO) break;
+                for (int size = paths.size(), i = 0; i < size; i++) {
+                    UserPath p = paths.valueAt(i);
+                    if (p.closeTo(x, y, TOTAL_RATIO)) {
+                        paths.remove(i);
+                        invalidate();
+                    }
+                }
+                break;
+        }
     }
 
     private void triangleStart(int[] c) {
         List<UserPath> list = new ArrayList<>();
 
-        for (int i = 0; i < c.length; i++) {
-            list.add(paths.get(c[i]));
+        for (int aC : c) {
+            list.add(paths.get(aC));
         }
         Collections.sort(list);
         int pivotIndex = list.size() / 2;
@@ -170,6 +227,7 @@ public class UserPaint extends View {
         }
 
         this.gestureDetector.onTouchEvent(event);
+        this.mScaleGestureDetector.onTouchEvent(event);
         invalidate();
         return true;
     }
@@ -179,15 +237,51 @@ public class UserPaint extends View {
         @Override
         public boolean onDoubleTap(MotionEvent e) {
             if (viewType == ViewType.SCALAR) {
-                int pointerIndex = e.getActionIndex();
-                int pointerId = e.getPointerId(pointerIndex);
 
-                paths.get(pointerId).drawRectangle();
-                // clean drawing area on double tap
-                Log.d("Double Tap", "Tapped at: (" + pointerId + ")");
+                paths.get(paths.size() - 1).drawRectangle(200);
             }
             return true;
         }
 
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+
+        @Override
+        public boolean onScale(ScaleGestureDetector scaleGestureDetector){
+            if (viewType == ViewType.SCALAR) {
+
+                mScaleFactor *= scaleGestureDetector.getScaleFactor();
+
+                mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 10.0f));
+
+            }
+            return true;
+        }
+    }
+
+    //start timer function
+    public void startTimer() {
+        if (this.viewType == ViewType.TIMER) {
+            cTimer = new CountDownTimer(30000, 100) {
+                public void onTick(long millisUntilFinished) {
+                    for (int i = 0; i < paths.size(); i++) {
+                        UserPath fp = paths.valueAt(i);
+                        fp.move(20);
+                        invalidate();
+                    }
+                }
+                public void onFinish() {
+                }
+            };
+            cTimer.start();
+        }
+    }
+
+
+    //cancel timer
+    public void cancelTimer() {
+        if(cTimer!=null)
+            cTimer.cancel();
     }
 }

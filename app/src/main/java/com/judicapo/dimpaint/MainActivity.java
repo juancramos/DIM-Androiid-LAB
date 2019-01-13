@@ -23,20 +23,28 @@ public class MainActivity extends AppCompatActivity {
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?
         boolean checked = ((RadioButton) view).isChecked();
-
         // Check which radio button was clicked
         switch(view.getId()) {
             case R.id.radio_design:
+                userPaint.clear();
                 if (checked)
                     userPaint.viewType = ViewType.DESIGN;
                     break;
             case R.id.radio_vector:
+                userPaint.clear();
                 if (checked)
                     userPaint.viewType = ViewType.VECTOR;
                     break;
             case R.id.radio_scalar:
+                userPaint.clear();
                 if (checked)
                     userPaint.viewType = ViewType.SCALAR;
+                break;
+            case R.id.radio_timer:
+                if (checked) {
+                    userPaint.viewType = ViewType.TIMER;
+                    userPaint.startTimer();
+                }
                 break;
         }
     }

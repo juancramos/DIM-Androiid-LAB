@@ -38,6 +38,13 @@
             android:layout_height="wrap_content"
             android:onClick="onRadioButtonClicked"
             android:text="scalar" />
+
+        <RadioButton
+            android:id="@+id/radio_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="timer" />
     </RadioGroup>
 
 </android.support.constraint.ConstraintLayout>

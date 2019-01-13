@@ -4,5 +4,6 @@ public enum ViewType {
     NONE,
     DESIGN,
     VECTOR,
-    SCALAR
+    SCALAR,
+    TIMER
 }
