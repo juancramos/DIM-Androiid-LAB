@@ -25,7 +25,7 @@ public class UserPaint extends View {
     private static final int DEFAULT_COLOR = Color.RED;
     private static final int DEFAULT_BG_COLOR = Color.WHITE;
     private static final float TOUCH_TOLERANCE = 4;
-    private static final float TOTAL_RATIO = 100;
+    private static final float TOTAL_RATIO = 200;
     private Random rnd = new Random();
     private Paint mPaint;
     private SparseArray<UserPath> paths;
